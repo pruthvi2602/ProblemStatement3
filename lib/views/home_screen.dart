@@ -54,6 +54,16 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('TaskFlow'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            tooltip: 'Add Task Manually',
+            onPressed: () => _showAddTaskDialog(context, ref),
+          ),
+          IconButton(
+            icon: Icon(Icons.info_outline),
+            tooltip: 'Voice Command Help',
+            onPressed: () => _showVoiceCommandHelp(context),
+          ),
           ConnectivityStatusIndicator(),
         ],
       ),
@@ -156,6 +166,101 @@ class HomeScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
+    );
+  }
+
+  void _showAddTaskDialog(BuildContext context, WidgetRef ref) {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    DateTime? selectedDate;
+    int? selectedPriority;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add New Task'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Task Title',
+                    hintText: 'Enter task title',
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Enter task description',
+                  ),
+                  maxLines: 3,
+                ),
+                SizedBox(height: 16),
+                ListTile(
+                  title: Text('Due Date'),
+                  trailing: TextButton(
+                    child: Text(selectedDate == null
+                        ? 'Select Date'
+                        : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'),
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        selectedDate = date;
+                      }
+                    },
+                  ),
+                ),
+                ListTile(
+                  title: Text('Priority'),
+                  trailing: DropdownButton<int>(
+                    value: selectedPriority ?? 2,
+                    items: [
+                      DropdownMenuItem(value: 1, child: Text('High')),
+                      DropdownMenuItem(value: 2, child: Text('Medium')),
+                      DropdownMenuItem(value: 3, child: Text('Low')),
+                    ],
+                    onChanged: (value) {
+                      selectedPriority = value;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: Text('Add'),
+              onPressed: () {
+                if (titleController.text.isNotEmpty) {
+                  final newTask = Task(
+                    title: titleController.text,
+                    description: descriptionController.text,
+                    dueDate: selectedDate,
+                    priority: selectedPriority ?? 2,
+                    isCompleted: false,
+                  );
+                  ref.read(tasksProvider.notifier).addTask(newTask);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

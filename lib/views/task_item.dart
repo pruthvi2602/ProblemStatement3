@@ -7,12 +7,12 @@ import '../controllers/providers.dart';
 
 class TaskItem extends ConsumerWidget {
   final Task task;
-  
+
   const TaskItem({
     required this.task,
     Key? key,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Dismissible(
@@ -33,15 +33,15 @@ class TaskItem extends ConsumerWidget {
         if (direction == DismissDirection.startToEnd) {
           // Delete task
           ref.read(tasksProvider.notifier).deleteTask(task.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Task deleted'))
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Task deleted')));
         } else {
           // Mark as completed
           ref.read(tasksProvider.notifier).toggleTaskCompletion(task.id);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(task.isCompleted ? 'Task marked incomplete' : 'Task completed'))
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(task.isCompleted
+                  ? 'Task marked incomplete'
+                  : 'Task completed')));
         }
       },
       child: Card(
@@ -56,11 +56,49 @@ class TaskItem extends ConsumerWidget {
             ),
           ),
           subtitle: _buildSubtitle(context),
-          trailing: Checkbox(
-            value: task.isCompleted,
-            onChanged: (bool? value) {
-              ref.read(tasksProvider.notifier).toggleTaskCompletion(task.id);
-            },
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Delete Task'),
+                      content:
+                          Text('Are you sure you want to delete this task?'),
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        TextButton(
+                          child: Text('Delete',
+                              style: TextStyle(color: Colors.red)),
+                          onPressed: () {
+                            ref
+                                .read(tasksProvider.notifier)
+                                .deleteTask(task.id);
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Task deleted')));
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              Checkbox(
+                value: task.isCompleted,
+                onChanged: (bool? value) {
+                  ref
+                      .read(tasksProvider.notifier)
+                      .toggleTaskCompletion(task.id);
+                },
+              ),
+            ],
           ),
           onTap: () {
             // Show task details or edit
@@ -69,12 +107,12 @@ class TaskItem extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildPriorityIndicator() {
     if (task.priority == null) {
       return Icon(Icons.circle, color: Colors.grey, size: 16);
     }
-    
+
     Color color;
     switch (task.priority) {
       case 1:
@@ -89,41 +127,44 @@ class TaskItem extends ConsumerWidget {
       default:
         color = Colors.grey;
     }
-    
+
     return Icon(Icons.circle, color: color, size: 16);
   }
-  
+
   Widget? _buildSubtitle(BuildContext context) {
-    if (task.dueDate == null && (task.description == null || task.description!.isEmpty)) {
+    if (task.dueDate == null &&
+        (task.description == null || task.description!.isEmpty)) {
       return null;
     }
-    
+
     final parts = <String>[];
-    
+
     if (task.dueDate != null) {
       final now = DateTime.now();
       final tomorrow = DateTime(now.year, now.month, now.day + 1);
-      final dueDate = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
-      
+      final dueDate =
+          DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+
       String dueDateText;
-      if (dueDate.difference(DateTime(now.year, now.month, now.day)).inDays == 0) {
+      if (dueDate.difference(DateTime(now.year, now.month, now.day)).inDays ==
+          0) {
         dueDateText = 'Today';
-      } else if (dueDate.difference(DateTime(now.year, now.month, now.day)).inDays == 1) {
+      } else if (dueDate
+              .difference(DateTime(now.year, now.month, now.day))
+              .inDays ==
+          1) {
         dueDateText = 'Tomorrow';
       } else {
         dueDateText = DateFormat('MMM d').format(dueDate);
       }
-      
+
       parts.add('Due: $dueDateText');
     }
-    
+
     if (task.description != null && task.description!.isNotEmpty) {
       parts.add(task.description!);
     }
-    
+
     return Text(parts.join(' • '));
   }
 }
-
-
-
