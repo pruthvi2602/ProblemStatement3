@@ -40,6 +40,20 @@ class HomeScreen extends ConsumerWidget {
           priority: 3, // low priority
           isCompleted: false,
         ),
+        Task(
+          title: 'Schedule dentist appointment',
+          description: 'Call Dr. Smith for checkup',
+          dueDate: DateTime.now().add(Duration(days: 5)),
+          priority: 2,
+          isCompleted: false,
+        ),
+        Task(
+          title: 'Pay electricity bill',
+          description: 'Due by end of month',
+          dueDate: DateTime.now().add(Duration(days: 7)),
+          priority: 1,
+          isCompleted: false,
+        ),
       ];
 
       // Add each task individually
